@@ -10,7 +10,7 @@ from model import CNNEncoder, RNNDecoder
 from dataloader import Dataset
 import config
 
-def train_on_epocchs(train_loader:torch.utils.data.DataLoader):
+def train_on_epocchs(train_loader:torch.utils.data.DataLoader, test_loader:torch.utils.data.DataLoader):
     # 配置训练时环境
     use_cuda = torch.cuda.is_available()
     device = torch.device('cuda' if use_cuda else 'cpu')
@@ -44,7 +44,7 @@ def train_on_epocchs(train_loader:torch.utils.data.DataLoader):
     # 开始训练
     for ep in range(config.epoches):
         train_losses, train_scores = train(model, train_loader, optimizer, ep, device)
-        test_loss, test_score = validation()
+        test_loss, test_score = validation(model, test_loader, optimizer, ep, device)
 
         # 保存信息
         info['train_losses'].append(train_losses)
@@ -60,8 +60,8 @@ def train_on_epocchs(train_loader:torch.utils.data.DataLoader):
 def load_data_list(file_path):
     return pandas.read_csv(file_path).to_numpy()
 
-def train(model, dataloader, optimizer:torch.optim.Optimizer, epoch, device):
-    cnn_encoder, rnn_decoder = model
+def train(model:[nn.Module], dataloader:torch.utils.data.DataLoader, optimizer:torch.optim.Optimizer, epoch, device):
+    [cnn_encoder, rnn_decoder] = model
     cnn_encoder.train()
     rnn_decoder.train()
 
@@ -90,8 +90,8 @@ def train(model, dataloader, optimizer:torch.optim.Optimizer, epoch, device):
 
     return train_losses, train_scores
 
-def validation(model, optimizer, test_loader:torch.utils.data.Dataset, optimizer:torch.optim.Optimizer, device):
-    cnn_encoder, rnn_decoder = model
+def validation(model:[nn.Module], test_loader:torch.utils.data.DataLoader, optimizer:torch.optim.Optimizer, ep:int, device:int):
+    [cnn_encoder, rnn_decoder] = model
     cnn_encoder.eval()
     rnn_decoder.eval()
 
