@@ -11,7 +11,7 @@ default_test_size = 0.2
 
 def split(src_dir=default_src_dir, output_dir=default_src_dir, size=default_test_size):
     # 设置默认参数
-    src_dir = default_output_dir if src_dir is None else src_dir
+    src_dir = default_src_dir if src_dir is None else src_dir
     output_dir = default_output_dir if output_dir is None else output_dir
     size = default_test_size if size is None else size
 

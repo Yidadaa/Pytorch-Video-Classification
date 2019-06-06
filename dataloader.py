@@ -18,7 +18,6 @@ class Dataset(data.Dataset):
             )
         ])
 
-
     def read_images(self):
         pass
 
