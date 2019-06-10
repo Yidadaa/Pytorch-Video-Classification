@@ -47,6 +47,7 @@ class CNNEncoder(nn.Module):
                 x = self.cnn(x_3d[:, t, :, :, :])
                 x = torch.flatten(x)
 
+            print(x.shape)
             # 处理fc层
             x = self.fc(x)
 

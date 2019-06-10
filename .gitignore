@@ -3,3 +3,5 @@ data/train
 data/test
 data/train.csv
 data/test.csv
+
+__pycache__

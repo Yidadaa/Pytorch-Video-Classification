@@ -38,7 +38,7 @@ class Dataset(data.Dataset):
             self.transform(Image.open(img[2]).convert('RGB')) for img in imgs
         ], dim=0)
         # 为这些图片指定类别标签
-        y = self._label_category(imgs[0][0])
+        y = torch.tensor([self._label_category(imgs[0][0])])
         return X, y
 
     def _build_data_list(self, data_list=[]):
@@ -52,7 +52,7 @@ class Dataset(data.Dataset):
             if classname not in data_group:
                 data_group[classname] = {}
             if videoname not in data_group[classname]:
-                data_group[classname] = []
+                data_group[classname][videoname] = []
             data_group[classname][videoname].append(x)
 
         # 处理类别变量

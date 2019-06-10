@@ -1,6 +1,7 @@
 import torch
 from torch import nn
 from torch.nn import functional as F
+from torch.utils.data import DataLoader
 from torchvision import models
 import pandas
 import json
@@ -26,7 +27,7 @@ def train_on_epocchs(train_loader:torch.utils.data.DataLoader, test_loader:torch
         rnn_decoder = nn.DataParallel(rnn_decoder)
 
     # 提取网络参数，准备进行训练
-    model_params = list(cnn_encoder.parameters) + list(rnn_decoder.parameters())
+    model_params = list(cnn_encoder.parameters()) + list(rnn_decoder.parameters())
 
     # 设定优化器
     optimizer = torch.optim.Adam(model_params, lr=config.learning_rate)
@@ -127,5 +128,8 @@ def validation(model:[nn.Module], test_loader:torch.utils.data.DataLoader, optim
     return test_loss, test_acc
 
 if __name__ == "__main__":
-    # TODO: 初始化训练参数，准备训练
-    pass
+    train_data = pandas.read_csv('./data/train.csv')
+    test_data = pandas.read_csv('./data/test.csv')
+    train_loader = DataLoader(Dataset(train_data.to_numpy()), **config.train_dataset_params)
+    test_loader = DataLoader(Dataset(test_data.to_numpy()), **config.train_dataset_params)
+    train_on_epocchs(train_loader, test_loader)
