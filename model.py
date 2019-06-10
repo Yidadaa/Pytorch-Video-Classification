@@ -4,11 +4,15 @@ from torch.nn import functional as F
 from torchvision import models
 
 class CNNEncoder(nn.Module):
-    def __init__(self):
+    def __init__(self, cnn_out_dim=256, drop_prob=0.3, bn_momentum=0.01):
         '''
         使用pytorch提供的预训练模型作为encoder
         '''
         super(CNNEncoder, self).__init__()
+
+        self.cnn_out_dim = cnn_out_dim
+        self.drop_prob = drop_prob
+        self.bn_momentum = bn_momentum
 
         # 使用resnet预训练模型来提取特征，去掉最后一层分类器
         pretrained_cnn = models.resnet152(pretrained=True)
@@ -16,22 +20,22 @@ class CNNEncoder(nn.Module):
 
         # 把resnet的最后一层fc层去掉，用来提取特征
         self.cnn = nn.Sequential(*cnn_layers)
-        # 将特征embed成256维向量
+        # 将特征embed成cnn_out_dim维向量
         self.fc = nn.Sequential(
             *[
                 self._build_fc(pretrained_cnn.fc.in_features, 512, True),
                 nn.ReLU(),
                 self._build_fc(512, 512, True),
                 nn.ReLU(),
-                nn.Dropout(p=0.3),
-                self._build_fc(512, 256, False)
+                nn.Dropout(p=self.drop_prob),
+                self._build_fc(512, self.cnn_out_dim, False)
             ]
         )
 
     def _build_fc(self, in_features, out_features, with_bn=True):
         return nn.Sequential(
             nn.Linear(in_features, out_features),
-            nn.BatchNorm1d(out_features, momentum=0.01)
+            nn.BatchNorm1d(out_features, momentum=self.bn_momentum)
         ) if with_bn else nn.Linear(in_features, out_features)
 
     def forward(self, x_3d):
@@ -57,7 +61,7 @@ class CNNEncoder(nn.Module):
         return cnn_embedding_out
 
 class RNNDecoder(nn.Module):
-    def __init__(self, cnn_out_dim=256, rnn_hidden_layers=3, rnn_hidden_nodes=256,
+    def __init__(self, use_gru=True, cnn_out_dim=256, rnn_hidden_layers=3, rnn_hidden_nodes=256,
             num_classes=10, drop_prob=0.3):
         super(RNNDecoder, self).__init__()
 
@@ -68,13 +72,16 @@ class RNNDecoder(nn.Module):
         self.drop_prob = drop_prob
         self.num_classes = num_classes # 这里调整分类数目
 
-        # 使用lstm作为rnn层
-        self.lstm = nn.LSTM(
-            input_size=self.rnn_input_features,
-            hidden_size=self.rnn_hidden_nodes,
-            num_layers=self.rnn_hidden_layers,
-            batch_first=True
-        )
+        # rnn配置参数
+        rnn_params = {
+            'input_size': self.rnn_input_features,
+            'hidden_size': self.rnn_hidden_nodes,
+            'num_layers': self.rnn_hidden_layers,
+            'batch_first': True
+        }
+
+        # 使用lstm或者gru作为rnn层
+        self.rnn = (nn.GRU if use_gru else nn.LSTM)(**rnn_params)
 
         # rnn层输出到线性分类器
         self.fc = nn.Sequential(
@@ -85,9 +92,9 @@ class RNNDecoder(nn.Module):
         )
 
     def forward(self, x_rnn):
-        self.lstm.flatten_parameters()
-        rnn_out, (h_n, h_c) = self.lstm(x_rnn, None)
-        # 注意，前面定义lstm时，batch_first=True保证了以下结构：
+        self.rnn.flatten_parameters()
+        rnn_out, _ = self.rnn(x_rnn, None)
+        # 注意，前面定义rnn模块时，batch_first=True保证了以下结构：
         # rnn_out shape: (batch, timestep, output_size)
         # h_n and h_c shape: (n_layers, batch, hidden_size)
 
