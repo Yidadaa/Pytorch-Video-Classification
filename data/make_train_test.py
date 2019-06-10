@@ -78,14 +78,13 @@ def split(src_dir=default_src_dir, output_dir=default_src_dir, size=default_test
                 f.write('\n'.join([','.join(line) for line in datas[i]]))
 
 def parse_args():
-    parser = argparse.ArgumentParser(usage='命令示例 python3 make_train_test.py -i path/to/UCF -o path/to/output -s 0.3')
-    parser.add_argument('-i', '--input_dir', help='UCF数据集所在路径')
-    parser.add_argument('-o', '--output_dir', help='生成的训练集和测试集所在路径')
-    parser.add_argument('-s', '--split_size', help='测试集占比')
+    parser = argparse.ArgumentParser(usage='python3 make_train_test.py -i path/to/UCF -o path/to/output -s 0.3')
+    parser.add_argument('-i', '--input_dir', help='path to UCF datasets', default=default_src_dir)
+    parser.add_argument('-o', '--output_dir', help='path to output', defatult=default_output_dir)
+    parser.add_argument('-s', '--split_size', help='ratio of test sets', default=default_test_size)
     args = parser.parse_args()
-
     return args
 
 if __name__ == '__main__':
     args = parse_args()
-    split(src_dir=args.input_dir, output_dir=args.output_dir, size=args.split_size)
+    split(**vars(args))

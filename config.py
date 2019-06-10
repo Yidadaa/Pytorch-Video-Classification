@@ -1,7 +1,7 @@
 img_w = 224
 img_h = 224
 
-train_dataset_params = {
+dataset_params = {
     'batch_size': 128,
     'shuffle': True,
     'num_workers': 4,

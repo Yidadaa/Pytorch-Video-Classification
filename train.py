@@ -3,16 +3,18 @@ from torch import nn
 from torch.nn import functional as F
 from torch.utils.data import DataLoader
 from torchvision import models
+from sklearn.metrics import accuracy_score
+from tqdm import tqdm
 import pandas
 import json
 import os
-from sklearn.metrics import accuracy_score
+import argparse
 
 from model import CNNEncoder, RNNDecoder
 from dataloader import Dataset
 import config
 
-def train_on_epocchs(train_loader:DataLoader, test_loader:DataLoader, restore_from:str=None):
+def train_on_epochs(train_loader:DataLoader, test_loader:DataLoader, restore_from:str=None):
     # 配置训练时环境
     use_cuda = torch.cuda.is_available()
     device = torch.device('cuda' if use_cuda else 'cpu')
@@ -55,6 +57,10 @@ def train_on_epocchs(train_loader:DataLoader, test_loader:DataLoader, restore_fr
 
     start_ep = ckpt['epoch'] + 1 if 'epoch' in ckpt else 0
 
+    save_path = './checkpoints'
+    if not os.path.exists(save_path):
+        os.mkdir(save_path)
+
     # 开始训练
     for ep in range(start_ep, config.epoches):
         train_losses, train_scores = train(model, train_loader, optimizer, ep, device)
@@ -67,17 +73,14 @@ def train_on_epocchs(train_loader:DataLoader, test_loader:DataLoader, restore_fr
         info['test_scores'].append(test_score)
 
         # 保存模型
-        save_path = './checkpoints'
+        ckpt_path = os.path.join(save_path, 'ep-%d.pth' % ep)
         if (ep + 1) % config.save_interval == 0:
-            if not os.path.exists(save_path):
-                os.mkdir(save_path)
             torch.save({
                 'epoch': ep,
                 'model_state_dict': model.state_dict(),
                 'optimizer_state_dict': optimizer.state_dict(),
-            }, save_path)
-
-            print('Model of Epoch %3d has been saved to: %s' % (ep, save_path))
+            }, ckpt_path)
+            print('Model of Epoch %3d has been saved to: %s' % (ep, ckpt_path))
 
     with open('./train_info.json', 'w') as f:
         json.dump(info, f)
@@ -132,7 +135,7 @@ def validation(model:nn.Sequential, test_loader:torch.utils.data.DataLoader, opt
 
     # 不需要反向传播，关闭求导
     with torch.no_grad():
-        for X, y in test_loader:
+        for X, y in tqdm(test_loader, desc='Validating'):
             # 对测试集中的数据进行预测
             X, y = X.to(device), y.to(device)
             y_ = model(X)
@@ -148,7 +151,6 @@ def validation(model:nn.Sequential, test_loader:torch.utils.data.DataLoader, opt
 
     # 计算loss
     test_loss /= len(test_loader)
-
     # 计算正确率
     test_acc = accuracy_score(y_gd, y_pred)
 
@@ -157,11 +159,19 @@ def validation(model:nn.Sequential, test_loader:torch.utils.data.DataLoader, opt
     return test_loss, test_acc
 
 def parse_args():
-    pass
+    parser = argparse.ArgumentParser(usage='python3 -i path/to/data -r path/to/checkpoint')
+    parser.add_argument('-i', '--data_path', help='path to your datasets', default='./data')
+    parser.add_argument('-r', '--restore_from', help='path to the checkpoint', default=None)
+    args = parser.parse_args()
+    return args
 
 if __name__ == "__main__":
-    train_data = pandas.read_csv('./data/train.csv')
-    test_data = pandas.read_csv('./data/test.csv')
-    train_loader = DataLoader(Dataset(train_data.to_numpy()), **config.train_dataset_params)
-    test_loader = DataLoader(Dataset(test_data.to_numpy()), **config.train_dataset_params)
-    train_on_epocchs(train_loader, test_loader)
+    args = parse_args()
+    data_path = args.data_path
+
+    # 准备数据加载器
+    dataloaders = {}
+    for name in ['train', 'test']:
+        raw_data = pandas.read_csv(os.path.join(data_path, '%s.csv' % name))
+        dataloaders[name] = DataLoader(Dataset(raw_data.to_numpy()), **config.dataset_params)
+    train_on_epochs(dataloaders['train'], dataloaders['test'], args.restore_from)
