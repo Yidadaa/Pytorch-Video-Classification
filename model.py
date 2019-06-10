@@ -58,7 +58,7 @@ class CNNEncoder(nn.Module):
 
 class RNNDecoder(nn.Module):
     def __init__(self, cnn_out_dim=256, rnn_hidden_layers=3, rnn_hidden_nodes=256,
-            num_classes=3, drop_prob=0.3):
+            num_classes=10, drop_prob=0.3):
         super(RNNDecoder, self).__init__()
 
         self.rnn_input_features = cnn_out_dim

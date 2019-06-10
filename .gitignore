@@ -4,6 +4,8 @@ data/test
 data/train.csv
 data/test.csv
 
+checkpoints
 __pycache__
 
 *.swp
+

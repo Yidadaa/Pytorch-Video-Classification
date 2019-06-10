@@ -125,7 +125,8 @@ def validation(model:[nn.Module], test_loader:torch.utils.data.DataLoader, optim
     # 计算正确率
     test_acc = accuracy_score(y_gd, y_pred)
 
-    print('[Epoch %3d]Test avg loss: %0.4f, acc: %0.2f\n' % (epoch, test_loss, test_acc * 100))
+    print('[Epoch %3d]Test avg loss: %0.4f, acc: %0.2f\n' % (epoch, test_loss, test_acc))
+
 
     return test_loss, test_acc
 
