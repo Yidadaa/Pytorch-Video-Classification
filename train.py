@@ -18,7 +18,7 @@ def train_on_epocchs(train_loader:torch.utils.data.DataLoader, test_loader:torch
     # 实例化计算图模型
     cnn_encoder = CNNEncoder().to(device)
     rnn_decoder = RNNDecoder().to(device)
-    
+
     # 多GPU训练
     device_count = torch.cuda.device_count()
     if device_count > 1:
@@ -76,6 +76,7 @@ def train(model:[nn.Module], dataloader:torch.utils.data.DataLoader, optimizer:t
         optimizer.zero_grad()
         # 执行前向传播
         y_ = rnn_decoder(cnn_encoder(X))
+        print('一个周期完成', y_.shape, y.shape)
         # 计算loss
         loss = F.cross_entropy(y_, y)
         # 反向传播梯度

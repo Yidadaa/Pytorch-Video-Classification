@@ -43,7 +43,7 @@ def split(src_dir=default_src_dir, output_dir=default_src_dir, size=default_test
                 os.mkdir(class_dir)
 
         # 遍历每个视频，将每个视频的图像帧提取出来
-        for i in tqdm(range(len(videos)), desc='[%d/%d]%s' % (class_index, num_classes, classname)):
+        for i in tqdm(range(len(videos)), desc='[%d/%d]%s' % (class_index + 1, num_classes, classname)):
             video_path = os.path.join(src_dir, classname, videos[i])
             video_fd = cv2.VideoCapture(video_path)
 
