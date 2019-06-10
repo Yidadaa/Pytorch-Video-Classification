@@ -37,7 +37,7 @@ class Dataset(data.Dataset):
             self.transform(Image.open(img[2]).convert('RGB')) for img in imgs
         ], dim=0)
         # 为这些图片指定类别标签
-        y = torch.tensor([self._label_category(imgs[0][0])])
+        y = torch.tensor(self._label_category(imgs[0][0]))
         return X, y
 
     def _build_data_list(self, data_list=[]):
@@ -58,6 +58,7 @@ class Dataset(data.Dataset):
         self.labels = list(data_group.keys())
 
         ret_list = []
+        n = 0
 
         # 填充数据
         for classname in data_group:
@@ -65,8 +66,9 @@ class Dataset(data.Dataset):
             for videoname in video_group:
                 # 如果某个视频的帧总数没法被time_step整除，那么需要按照最后一帧进行填充
                 video_pad_count = len(video_group[videoname]) % self.time_step
-                video_group[videoname] = [video_group[videoname][-1]] * (self.time_step - video_pad_count)
+                video_group[videoname] += [video_group[videoname][-1]] * (self.time_step - video_pad_count)
                 ret_list += video_group[videoname]
+                n += len(video_group[videoname])
 
         return ret_list
 

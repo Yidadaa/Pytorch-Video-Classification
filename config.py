@@ -10,4 +10,4 @@ train_dataset_params = {
 
 learning_rate = 1e-5
 epoches = 120
-log_interval = 20 # 每20个batchsize打印一次信息
+log_interval = 5 # 每20个batchsize打印一次信息

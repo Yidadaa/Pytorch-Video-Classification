@@ -68,6 +68,9 @@ def train(model:[nn.Module], dataloader:torch.utils.data.DataLoader, optimizer:t
 
     train_losses = []
     train_scores = []
+
+    print('Size of Training Set: ', len(dataloader.dataset))
+
     for i, (X, y) in enumerate(dataloader):
         X = X.to(device)
         y = y.to(device)
@@ -76,7 +79,7 @@ def train(model:[nn.Module], dataloader:torch.utils.data.DataLoader, optimizer:t
         optimizer.zero_grad()
         # 执行前向传播
         y_ = rnn_decoder(cnn_encoder(X))
-        print('一个周期完成', y_.shape, y.shape)
+
         # 计算loss
         loss = F.cross_entropy(y_, y)
         # 反向传播梯度
@@ -85,10 +88,11 @@ def train(model:[nn.Module], dataloader:torch.utils.data.DataLoader, optimizer:t
 
         # 保存loss等信息
         train_losses.append(loss)
-        # TODO: 计算准确率
 
         if (i + 1) % config.log_interval == 0:
-            print('Traing')
+            y_ = y_.argmax(dim=1)
+            acc = accuracy_score(y_.cpu().numpy(), y.cpu().numpy())
+            print('[Epoch %3d]Training %3d of %3d: acc = %.2f' % (epoch, i, len(dataloader.dataset), acc))
 
     return train_losses, train_scores
 
@@ -108,21 +112,15 @@ def validation(model:[nn.Module], test_loader:torch.utils.data.DataLoader, optim
             loss = F.cross_entropy(y_, y, reduction='sum')
             test_loss += loss.item()
 
-            y_ = y.max(1, keepdim=True)[1]
+            y_ = y_.argmax(dim=1)
 
-            y_gd.append(y)
-            y_pred.append(y_)
+            y_gd += y
+            y_pred += y_.cpu().numpy()
 
     test_loss /= len(test_loader)
 
     # 计算正确率
-    y_gd = torch.stack(y_gd, dim=0)
-    y_pred = torch.stack(y_pred, dim=0)
-
-    test_acc = accuracy_score(
-        y_gd.cpu().data.squeeze.numpy(),
-        y_pred.cpu().data.squeeze.numpy()
-    )
+    test_acc = accuracy_score(y_gd, y_pred)
 
     print('\nTest set %d samples, avg loss: %0.4f, acc: %0.2f\n' % (len(y_gd), test_loss, test_acc * 100))
 
