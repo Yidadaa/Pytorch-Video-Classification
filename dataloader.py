@@ -21,6 +21,10 @@ class Dataset(data.Dataset):
         ])
         # 用来将类别转换为one-hot数据
         self.labels = []
+        # 用来缓存图片数据，直接加载到内存中
+        self.images = []
+        # 是否直接加载至内存中，可以加快训练速
+        self.use_mem = False
 
         self.skip_frame = skip_frame
         self.time_step = time_step
@@ -32,13 +36,22 @@ class Dataset(data.Dataset):
     def __getitem__(self, index):
         # 每次读取time_step帧图片
         imgs = self.data_list[index:index + self.time_step]
-        # 图片读取为RGB模式，并堆叠到一起
-        X = torch.stack([
-            self.transform(Image.open(img[2]).convert('RGB')) for img in imgs
-        ], dim=0)
+
+        # 图片读取来源，如果设置了内存加速，则从内存中读取
+        if self.use_mem:
+            X = [self.images[x[3]] for x in imgs]
+        else:
+            X = [self._read_img_and_transform(x[2]) for x in imgs]
+
+        # 转换成tensor
+        X = torch.stack(X, dim=0)
+
         # 为这些图片指定类别标签
         y = torch.tensor(self._label_category(imgs[0][0]))
         return X, y
+
+    def _read_img_and_transform(self, img:str):
+        return self.transform(Image.open(img).convert('RGB'))
 
     def _build_data_list(self, data_list=[]):
         '''
@@ -52,7 +65,12 @@ class Dataset(data.Dataset):
                 data_group[classname] = {}
             if videoname not in data_group[classname]:
                 data_group[classname][videoname] = []
-            data_group[classname][videoname].append(x)
+
+            # 将图片数据加载到内存
+            if self.use_mem:
+                self.images.append(self._read_img_and_transform(x[2]))
+
+            data_group[classname][videoname].append(list(x) + [len(self.images) - 1])
 
         # 处理类别变量
         self.labels = list(data_group.keys())

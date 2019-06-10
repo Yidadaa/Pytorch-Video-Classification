@@ -92,14 +92,17 @@ def train(model:[nn.Module], dataloader:torch.utils.data.DataLoader, optimizer:t
         if (i + 1) % config.log_interval == 0:
             y_ = y_.argmax(dim=1)
             acc = accuracy_score(y_.cpu().numpy(), y.cpu().numpy())
-            print('[Epoch %3d]Training %3d of %3d: acc = %.2f' % (epoch, i, len(dataloader.dataset), acc))
+            print(y_[0:5], y_[0:5])
+            print('[Epoch %3d]Training %3d of %3d: acc = %.2f' % (epoch, i + 1, len(dataloader), acc))
 
     return train_losses, train_scores
 
-def validation(model:[nn.Module], test_loader:torch.utils.data.DataLoader, optimizer:torch.optim.Optimizer, ep:int, device:int):
+def validation(model:[nn.Module], test_loader:torch.utils.data.DataLoader, optimizer:torch.optim.Optimizer, epoch:int, device:int):
     [cnn_encoder, rnn_decoder] = model
     cnn_encoder.eval()
     rnn_decoder.eval()
+
+    print('Size of Test Set: ', len(test_loader.dataset))
 
     test_loss = 0
     y_gd = []
@@ -114,15 +117,15 @@ def validation(model:[nn.Module], test_loader:torch.utils.data.DataLoader, optim
 
             y_ = y_.argmax(dim=1)
 
-            y_gd += y
-            y_pred += y_.cpu().numpy()
+            y_gd += y.cpu().numpy().tolist()
+            y_pred += y_.cpu().numpy().tolist()
 
     test_loss /= len(test_loader)
 
     # 计算正确率
     test_acc = accuracy_score(y_gd, y_pred)
 
-    print('\nTest set %d samples, avg loss: %0.4f, acc: %0.2f\n' % (len(y_gd), test_loss, test_acc * 100))
+    print('[Epoch %3d]Test avg loss: %0.4f, acc: %0.2f\n' % (epoch, test_loss, test_acc * 100))
 
     return test_loss, test_acc
 
