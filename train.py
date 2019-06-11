@@ -37,6 +37,7 @@ def train_on_epochs(train_loader:DataLoader, test_loader:DataLoader, restore_fro
     if restore_from is not None:
         ckpt = torch.load(restore_from)
         model.load_state_dict(ckpt['model_state_dict'])
+        print('Model is loaded from %s' % (restore_from))
 
     # 提取网络参数，准备进行训练
     model_params = model.parameters()
@@ -119,7 +120,7 @@ def train(model:nn.Sequential, dataloader:torch.utils.data.DataLoader, optimizer
         if (i + 1) % config.log_interval == 0:
             y_ = y_.argmax(dim=1)
             acc = accuracy_score(y_.cpu().numpy(), y.cpu().numpy())
-            print('[Epoch %3d]Training %3d of %3d: acc = %.2f' % (epoch, i + 1, len(dataloader), acc))
+            print('[Epoch %3d]Training %3d of %3d: acc = %.2f, loss = %.2f' % (epoch, i + 1, len(dataloader), acc, loss.item()))
 
     return train_losses, train_scores
 
