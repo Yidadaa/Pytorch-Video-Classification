@@ -11,7 +11,7 @@ conda install pytorch torchvision cudatoolkit=9.0 -c pytorch
 # CPU version
 conda install pytorch-cpu torchvision-cpu -c pytorch
 
-# 2. depencies
+# 2. pip dependencies
 pip install pandas scikit-learn tqdm opencv-python
 
 # 3. prepare datasets
@@ -19,7 +19,7 @@ cd ./Pytorch-Video-Classification # go to the root dir of the code
 cp -r path/to/your/UCF ./data # copy UCF dataset to data dir
 cd ./data && python make_train_test.py # preprocess the dataset
 
-# 4. train your network
+# 4. train your network on UCF-101
 python train.py
 
 # (optional)5. restore from checkpoints
