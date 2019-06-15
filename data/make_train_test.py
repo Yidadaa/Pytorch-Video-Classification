@@ -79,9 +79,9 @@ def split(src_dir=default_src_dir, output_dir=default_src_dir, size=default_test
 
 def parse_args():
     parser = argparse.ArgumentParser(usage='python3 make_train_test.py -i path/to/UCF -o path/to/output -s 0.3')
-    parser.add_argument('-i', '--input_dir', help='path to UCF datasets', default=default_src_dir)
-    parser.add_argument('-o', '--output_dir', help='path to output', defatult=default_output_dir)
-    parser.add_argument('-s', '--split_size', help='ratio of test sets', default=default_test_size)
+    parser.add_argument('-i', '--src_dir', help='path to UCF datasets', default=default_src_dir)
+    parser.add_argument('-o', '--output_dir', help='path to output', default=default_output_dir)
+    parser.add_argument('-s', '--size', help='ratio of test sets', default=default_test_size)
     args = parser.parse_args()
     return args
 
