@@ -6,19 +6,10 @@ from PIL import Image
 import config
 
 class Dataset(data.Dataset):
-    def __init__(self, data_list, skip_frame=1, time_step=30):
+    def __init__(self, data_list=[], skip_frame=1, time_step=30):
         '''
         定义一个数据集，从UCF101中读取数据
         '''
-        # 定义图像的预处理函数
-        self.transform = transforms.Compose([
-            transforms.Resize((config.img_w, config.img_h)),
-            transforms.ToTensor(),
-            transforms.Normalize(
-                mean=[0.485, 0.456, 0.406],
-                std=[0.229, 0.224, 0.225]
-            )
-        ])
         # 用来将类别转换为one-hot数据
         self.labels = []
         # 用来缓存图片数据，直接加载到内存中
@@ -50,6 +41,16 @@ class Dataset(data.Dataset):
         y = torch.tensor(self._label_category(imgs[0][0]))
         return X, y
 
+    def transform(self, img):
+        return transforms.Compose([
+            transforms.Resize((config.img_w, config.img_h)),
+            transforms.ToTensor(),
+            transforms.Normalize(
+                mean=[0.485, 0.456, 0.406],
+                std=[0.229, 0.224, 0.225]
+            )
+        ])(img)
+
     def _read_img_and_transform(self, img:str):
         return self.transform(Image.open(img).convert('RGB'))
 
@@ -57,6 +58,9 @@ class Dataset(data.Dataset):
         '''
         构建数据集
         '''
+        if len(data_list) == 0:
+            return []
+
         data_group = {}
         for x in tqdm(data_list, desc='Building dataset'):
             # 将视频分别按照classname和videoname分组
