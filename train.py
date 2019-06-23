@@ -114,12 +114,14 @@ def train(model:nn.Sequential, dataloader:torch.utils.data.DataLoader, optimizer
         loss.backward()
         optimizer.step()
 
+        y_ = y_.argmax(dim=1)
+        acc = accuracy_score(y_.cpu().numpy(), y.cpu().numpy())
+
         # 保存loss等信息
-        train_losses.append(loss)
+        train_losses.append(loss.item())
+        train_scores.append(acc)
 
         if (i + 1) % config.log_interval == 0:
-            y_ = y_.argmax(dim=1)
-            acc = accuracy_score(y_.cpu().numpy(), y.cpu().numpy())
             print('[Epoch %3d]Training %3d of %3d: acc = %.2f, loss = %.2f' % (epoch, i + 1, len(dataloader), acc, loss.item()))
 
     return train_losses, train_scores
