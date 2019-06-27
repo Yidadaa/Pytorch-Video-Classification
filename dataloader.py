@@ -26,7 +26,7 @@ class Dataset(data.Dataset):
 
     def __getitem__(self, index):
         # 每次读取time_step帧图片
-        index = index * 30
+        index = index * self.time_step
         imgs = self.data_list[index:index + self.time_step]
 
         # 图片读取来源，如果设置了内存加速，则从内存中读取

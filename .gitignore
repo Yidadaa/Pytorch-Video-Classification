@@ -8,4 +8,4 @@ checkpoints
 __pycache__
 
 *.swp
-
+*.csv
