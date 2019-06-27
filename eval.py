@@ -69,6 +69,11 @@ def _eval(checkpoint: str, video_path: str, labels=[])->list:
     model.load_state_dict(ckpt['model_state_dict'])
     print('Model has been loaded from {}'.format(checkpoint))
 
+    label_map = [-1] * config.rnn_decoder_params['num_classes']
+    # load label map
+    if 'label_map' in ckpt:
+        label_map = ckpt['label_map']
+
     # Do inference
     pred_labels = []
     video_names = os.listdir(video_path)
@@ -84,7 +89,8 @@ def _eval(checkpoint: str, video_path: str, labels=[])->list:
             images = images.to(device)
             pred_y = model(images) # type: torch.Tensor
             pred_y = pred_y.argmax(dim=1).cpu().numpy().tolist()
-            pred_labels += pred_y
+            pred_labels.append([video, pred_y[0], label_map[pred_y[0]]])
+            print(pred_labels[-1])
 
     if len(labels) > 0:
         acc = accuracy_score(pred_labels, labels)

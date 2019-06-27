@@ -80,6 +80,7 @@ def train_on_epochs(train_loader:DataLoader, test_loader:DataLoader, restore_fro
                 'epoch': ep,
                 'model_state_dict': model.state_dict(),
                 'optimizer_state_dict': optimizer.state_dict(),
+                'label_map': train_loader.dataset.labels
             }, ckpt_path)
             print('Model of Epoch %3d has been saved to: %s' % (ep, ckpt_path))
 
@@ -162,7 +163,7 @@ def validation(model:nn.Sequential, test_loader:torch.utils.data.DataLoader, opt
     return test_loss, test_acc
 
 def parse_args():
-    parser = argparse.ArgumentParser(usage='python3 -i path/to/data -r path/to/checkpoint')
+    parser = argparse.ArgumentParser(usage='python3 train.py -i path/to/data -r path/to/checkpoint')
     parser.add_argument('-i', '--data_path', help='path to your datasets', default='./data')
     parser.add_argument('-r', '--restore_from', help='path to the checkpoint', default=None)
     args = parser.parse_args()
